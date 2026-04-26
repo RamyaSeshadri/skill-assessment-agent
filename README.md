@@ -140,8 +140,7 @@ python -m streamlit run app.py
 
 ### Job Description
 
-💻 1. Software Development (Backend Developer)
-📄 Job Description
+Software Development (Backend Developer)
 
 We are looking for a Backend Developer with strong experience in Python-based web development.
 
