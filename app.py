@@ -286,7 +286,7 @@ with tab2:
                 reason = r.get("reason", "")
                 total_score += score
 
-                st.subheader(f"Skill {idx + 1}")
+                st.subheader(f"Skill: {st.session_state.skills[idx]}")
                 st.write(f"**Score:** {score}/10")
                 st.write(f"**Level:** {level}")
                 st.write(f"**Reason:** {reason}")
