@@ -99,6 +99,9 @@ Architecture Diagram is available in:
 architecture-diagram.png
 
 ---
+## Scoring & Logic
+
+Skill Assement Agent uses a multi-stage LLM pipeline to evaluate candidates against job descriptions. It performs semantic skill extraction, resume matching, and identifies skill gaps. The system generates role-specific interview questions, evaluates responses using an LLM-based rubric, and computes an overall fit score. Based on performance, it produces a personalized learning roadmap focused on bridging skill gaps through adjacent skills and practical learning paths.
 
 ## Local Setup Instructions
 
@@ -257,10 +260,6 @@ https://skill-assessment-agent.streamlit.app/
 https://github.com/RamyaSeshadri/skill-assessment-agent
 
 ---
-
-## Scoring & Logic
-
-Skill Assement Agent uses a multi-stage LLM pipeline to evaluate candidates against job descriptions. It performs semantic skill extraction, resume matching, and identifies skill gaps. The system generates role-specific interview questions, evaluates responses using an LLM-based rubric, and computes an overall fit score. Based on performance, it produces a personalized learning roadmap focused on bridging skill gaps through adjacent skills and practical learning paths.
 
 ## Future Improvements
 
