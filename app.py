@@ -7,7 +7,7 @@ from groq import Groq
 # CONFIG
 # --------------------------------------------------
 st.set_page_config(
-    page_title="SkillBridge",
+    page_title="SkillBridge AI",
     page_icon="🚀",
     layout="wide"
 )
@@ -20,36 +20,41 @@ st.title("🚀 AI-Powered Skill Assessment & Personalised Learning Plan Agent")
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 # --------------------------------------------------
-# SESSION STATE
+# SESSION STATE INIT
 # --------------------------------------------------
-if "skills" not in st.session_state:
-    st.session_state.skills = []
+def init_state():
+    defaults = {
+        "skills": [],
+        "index": 0,
+        "results": [],
+        "questions": {},
+        "learning_plan": None,
+        "chat": [],
+        "answers": []
+    }
 
-if "index" not in st.session_state:
-    st.session_state.index = 0
+    for key, value in defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = value
 
-if "chat" not in st.session_state:
-    st.session_state.chat = []
 
-if "results" not in st.session_state:
-    st.session_state.results = []
-
-if "questions" not in st.session_state:
-    st.session_state.questions = {}
-
-if "learning_plan" not in st.session_state:
-    st.session_state.learning_plan = None
+init_state()
 
 # --------------------------------------------------
 # INPUTS
 # --------------------------------------------------
-jd_text = st.text_area("📄 Job Description")
-resume_text = st.text_area("📄 Resume")
+jd_text = st.text_area("📄 Job Description", height=250)
+resume_text = st.text_area("📄 Resume", height=250)
 
 # --------------------------------------------------
-#  JSON
+# JSON PARSER
 # --------------------------------------------------
 def get_json(text):
+    if not text:
+        return None
+
+    text = text.replace("```json", "").replace("```", "").strip()
+
     try:
         return json.loads(text)
     except:
@@ -59,21 +64,21 @@ def get_json(text):
                 return json.loads(match.group())
             except:
                 return None
-        return None
+
+    return None
 
 # ==================================================
-# 1️⃣ MATCH ENGINE
+# 1. JD RESUME MATCH
 # ==================================================
 def match_engine(jd, resume):
-
     prompt = f"""
-Compare JD and Resume semantically.
+Compare the Job Description and Resume.
 
-Return JSON:
+Return STRICT JSON ONLY:
 {{
-  "skill_match_percent": 0-100,
-  "experience_match_percent": 0-100,
-  "overall_fit_percent": 0-100,
+  "skill_match_percent": 0,
+  "experience_match_percent": 0,
+  "overall_fit_percent": 0,
   "matches": ["..."],
   "gaps": ["..."],
   "summary": "short explanation"
@@ -95,15 +100,16 @@ Resume:
     return get_json(res.choices[0].message.content)
 
 # ==================================================
-# 2️⃣ SKILL EXTRACTION
+# 2. SKILL EXTRACTION
 # ==================================================
 def extract_skills(jd):
-
     prompt = f"""
-Extract ALL skills (technical + soft + domain).
+Extract the top important technical skills from this JD.
 
-Return JSON:
-{{ "skills": ["skill1", "skill2"] }}
+Return STRICT JSON ONLY:
+{{
+  "skills": ["skill1", "skill2", "skill3"]
+}}
 
 JD:
 {jd}
@@ -118,19 +124,19 @@ JD:
     return get_json(res.choices[0].message.content)
 
 # ==================================================
-# 3️⃣ QUESTION
+# 3. QUESTION GENERATION
 # ==================================================
 def generate_question(skill, jd):
-
     prompt = f"""
-You are an interviewer.
+You are a technical interviewer.
 
-Ask ONE real interview question for:
-Skill: {skill}
+Ask ONE realistic interview question for this skill:
+{skill}
 
-Context: {jd}
+Context:
+{jd}
 
-Return only question.
+Return only the question. No explanation.
 """
 
     res = client.chat.completions.create(
@@ -139,26 +145,33 @@ Return only question.
         temperature=0.4
     )
 
-    return res.choices[0].message.content
+    return res.choices[0].message.content.strip()
 
 # ==================================================
-# 4️⃣ EVALUATION
+# 4. EVALUATION
 # ==================================================
 def evaluate(skill, question, answer):
-
     prompt = f"""
-Evaluate response.
+You are an expert technical interviewer.
+
+Evaluate the candidate answer.
 
 Skill: {skill}
-Q: {question}
-A: {answer}
+Question: {question}
+Answer: {answer}
 
-Return JSON:
+Return STRICT JSON ONLY:
 {{
-  "score": 0-10,
+  "score": 0,
   "level": "Beginner|Intermediate|Strong|Expert",
   "reason": "short explanation"
 }}
+
+Rules:
+- No HTML
+- No markdown
+- Keep reason short
+- Do not repeat the answer
 """
 
     res = client.chat.completions.create(
@@ -170,28 +183,20 @@ Return JSON:
     return get_json(res.choices[0].message.content)
 
 # ==================================================
-# 5️⃣ LEARNING PLAN
+# 5. LEARNING PLAN
 # ==================================================
 def learning_plan(results, skills):
-
     prompt = f"""
-You are a career coach.
+Create a learning plan based on weak skills.
 
-Create learning plan based on weak skills (<6 score).
-
-Return JSON:
-
+Return STRICT JSON ONLY:
 {{
   "weak_skills": ["..."],
   "30_day_plan": ["..."],
   "60_day_plan": ["..."],
   "90_day_plan": ["..."],
-  "resources": {{
-    "skill": ["links or topics"]
-  }},
-  "adjacent_skills": {{
-    "skill": ["adj1", "adj2"]
-  }},
+  "resources": {{"skill": ["..."]}},
+  "adjacent_skills": {{"skill": ["..."]}}
 }}
 
 Results:
@@ -210,62 +215,88 @@ Skills:
     return get_json(res.choices[0].message.content)
 
 # ==================================================
-# TABS UI
+# TABS
 # ==================================================
 tab1, tab2, tab3 = st.tabs([
-    "📊 JD-Resume Match",
+    "📊 JD–Resume Match",
     "🎤 Interview",
     "📚 Learning Plan"
 ])
 
-# --------------------------------------------------
-# TAB 1 - MATCH
-# --------------------------------------------------
+# ==================================================
+# TAB 1
+# ==================================================
 with tab1:
-
     if st.button("Run Match Analysis"):
-
-        if jd_text and resume_text:
-
+        if not jd_text or not resume_text:
+            st.error("Please enter both JD and Resume")
+        else:
             result = match_engine(jd_text, resume_text)
 
-            if result:
-
-                st.metric("Skill Match %", result["skill_match_percent"])
-                st.metric("Experience Match %", result["experience_match_percent"])
-                st.metric("Overall Fit %", result["overall_fit_percent"])
+            if not isinstance(result, dict):
+                st.error("Match analysis failed")
+            else:
+                st.metric("Skill Match %", result.get("skill_match_percent", 0))
+                st.metric("Experience Match %", result.get("experience_match_percent", 0))
+                st.metric("Overall Fit %", result.get("overall_fit_percent", 0))
 
                 st.write("### Matches")
-                st.write(result["matches"])
+                st.write(result.get("matches", []))
 
                 st.write("### Gaps")
-                st.write(result["gaps"])
+                st.write(result.get("gaps", []))
 
                 st.write("### Summary")
-                st.write(result["summary"])
+                st.write(result.get("summary", ""))
 
-# --------------------------------------------------
-# TAB 2 - INTERVIEW 
-# --------------------------------------------------
-
+# ==================================================
+# TAB 2
+# ==================================================
 with tab2:
-
     if st.button("Start Interview"):
+        if not jd_text:
+            st.error("Please enter Job Description first")
+        else:
+            data = extract_skills(jd_text)
 
-        data = extract_skills(jd_text)
-        st.session_state.skills = (data.get("skills") or [])[:5]
-        st.session_state.index = 0
-        st.session_state.chat = []
-        st.session_state.results = []
-        st.rerun()
+            if not data or "skills" not in data:
+                st.error("Skill extraction failed")
+            else:
+                st.session_state.skills = data["skills"][:5]
+                st.session_state.index = 0
+                st.session_state.chat = []
+                st.session_state.results = []
+                st.session_state.answers = []
+                st.session_state.questions = {}
+                st.rerun()
 
     if st.session_state.skills:
-
         i = st.session_state.index
         skills = st.session_state.skills
 
-        if i < len(skills):
+        if i >= len(skills):
+            st.success("🎉 Interview Completed")
+            st.markdown("## Final Evaluation Report")
 
+            total_score = 0
+
+            for idx, r in enumerate(st.session_state.results):
+                score = r.get("score", 0)
+                level = r.get("level", "N/A")
+                reason = r.get("reason", "")
+                total_score += score
+
+                st.subheader(f"Skill {idx + 1}")
+                st.write(f"**Score:** {score}/10")
+                st.write(f"**Level:** {level}")
+                st.write(f"**Reason:** {reason}")
+                st.write(f"**Answer:** {st.session_state.answers[idx]}")
+                st.divider()
+
+            avg = total_score / len(st.session_state.results) if st.session_state.results else 0
+            st.metric("Final Score", f"{avg:.1f} / 10")
+
+        else:
             skill = skills[i]
 
             if skill not in st.session_state.questions:
@@ -273,70 +304,61 @@ with tab2:
 
             question = st.session_state.questions[skill]
 
-            st.markdown(
-                f"## 🎯 Skill : {skill}"
-            )
-
+            st.markdown("## Interview")
+            st.write(f"### Skill: {skill}")
             st.info(question)
 
-            answer = st.text_area("Your Answer", key=f"ans_{skill}")
+            answer = st.text_area("Your Answer", key=f"answer_{i}")
 
-            if st.button("Evaluate & Next"):
+            if st.button("Next Question"):
+                if not answer.strip():
+                    st.warning("Please enter your answer")
+                else:
+                    result = evaluate(skill, question, answer)
 
-                result = evaluate(skill, question, answer)
+                    if not isinstance(result, dict):
+                        st.error("Evaluation failed")
+                    else:
+                        st.session_state.results.append(result)
+                        st.session_state.answers.append(answer)
+                        st.session_state.index += 1
+                        st.rerun()
 
-                if result:
-                    st.session_state.results.append(result)
-
-                st.session_state.index += 1
-                st.rerun()
-
-        else:
-
-            st.success("Interview Completed 🎉")
-
-            scores = [r["score"] for r in st.session_state.results]
-            avg = sum(scores) / len(scores)
-
-            st.metric("Final Score", f"{avg:.1f} / 10")
-
-
-# --------------------------------------------------
-# TAB 3 - LEARNING PLAN
-# --------------------------------------------------
+# ==================================================
+# TAB 3
+# ==================================================
 with tab3:
-
     if st.button("Generate Learning Plan"):
-
-        if st.session_state.results and st.session_state.skills:
-
+        if not st.session_state.results:
+            st.error("Complete the interview first")
+        else:
             plan = learning_plan(
                 st.session_state.results,
                 st.session_state.skills
             )
 
-            st.session_state.learning_plan = plan
+            if not isinstance(plan, dict):
+                st.error("Learning plan generation failed")
+            else:
+                st.session_state.learning_plan = plan
 
     if st.session_state.learning_plan:
-
         p = st.session_state.learning_plan
 
         st.write("### Weak Skills")
-        st.write(p.get("weak_skills"))
+        st.write(p.get("weak_skills", []))
 
         st.write("### 30 Day Plan")
-        st.write(p.get("30_day_plan"))
+        st.write(p.get("30_day_plan", []))
 
         st.write("### 60 Day Plan")
-        st.write(p.get("60_day_plan"))
+        st.write(p.get("60_day_plan", []))
 
         st.write("### 90 Day Plan")
-        st.write(p.get("90_day_plan"))
+        st.write(p.get("90_day_plan", []))
 
         st.write("### Resources")
-        st.write(p.get("resources"))
+        st.write(p.get("resources", {}))
 
         st.write("### Adjacent Skills")
-        st.write(p.get("adjacent_skills"))
-
-      
+        st.write(p.get("adjacent_skills", {}))
