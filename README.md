@@ -1,6 +1,6 @@
 # AI-Powered Skill Assessment & Personalized Learning Plan Agent
 
-AI-powered agent that analyzes a Job Description and candidate resume, assesses real skill proficiency through dynamic questions, identifies skill gaps, and generates a personalized learning plan with recommended resources, time estimates, and a 30/60/90-day upskilling roadmap.
+AI-powered agent that analyzes a Job Description and candidate resume, assesses real skill proficiency through dynamic questions, identifies skill gaps, and generates a personalized learning plan with recommended resources and a 30/60/90-day upskilling roadmap.
 
 ## Problem Statement
 
@@ -137,45 +137,102 @@ python -m streamlit run app.py
 
 ### Job Description
 
-Data Governance Analyst with SQL, metadata management, Collibra, stakeholder communication, policy documentation, and data quality experience.
+💻 1. Software Development (Backend Developer)
+📄 Job Description
+
+We are looking for a Backend Developer with strong experience in Python-based web development.
+
+The candidate should have hands-on experience in building REST APIs using Flask or Django and working with relational databases such as SQL or MySQL. Knowledge of Docker, microservices architecture, and cloud platforms like AWS is required.
+
+Familiarity with Git, CI/CD pipelines, and system design is a plus.
+
+Responsibilities:
+
+Design and build scalable backend systems
+Develop RESTful APIs
+Work with cloud infrastructure (AWS)
+Collaborate with frontend and DevOps teams
+Optimize database performance
 
 ### Candidate Resume
 
-Candidate with experience in SQL, reporting, stakeholder collaboration, and data quality, but limited exposure to metadata management and governance tools.
+Name: Arjun Kumar
+Role: Backend Developer
+Experience: 4.5 years
+
+Summary
+
+Backend developer with experience in Python, API development, and database systems. Worked in Agile teams building scalable web applications and integrating third-party services.
+
+Skills
+Python (Flask)
+REST API development
+SQL (MySQL)
+Git & GitHub
+Basic AWS (EC2, S3)
+Docker (basic usage)
+Agile / Scrum
+Experience
+
+Software Engineer – TechNova Solutions (2020–Present)
+
+Built REST APIs using Flask for internal enterprise systems
+Designed MySQL schemas and optimized queries
+Worked with AWS EC2 for deployment
+Participated in CI/CD pipeline setup using Jenkins (basic level)
+
+Junior Developer – CodeWave (2018–2020)
+
+Developed backend services in Python
+Maintained database operations and API integration
+Worked in Agile sprint teams
+Education
+
+B.Tech Computer Science
 
 ---
 
 ## Sample Output
 
-### Matching Skills
+Skill Match %
 
-* SQL
-* Data Quality
-* Stakeholder Communication
+80
 
-### Missing Skills
+Experience Match %
 
-* Metadata Management
-* Collibra
-* Data Lineage
-* Governance Framework Design
+70
+
+Overall Fit %
+
+75
+
+Matches
+[
+0:"Backend Developer"
+1:"Python"
+2:"Flask"
+3:"REST API development"
+4:"SQL (MySQL)"
+5:"Git & GitHub"
+6:"AWS (EC2, S3)"
+7:"Docker (basic usage)"
+8:"Agile / Scrum"
+]
+Gaps
+[
+0:"Django"
+1:"Microservices architecture"
+2:"Cloud platforms (beyond AWS)"
+3:"CI/CD pipeline setup (beyond Jenkins)"
+4:"System design"
+]
+
+Summary
+Arjun Kumar is a Backend Developer with 4.5 years of experience in Python, API development, and database systems. He has hands-on experience in building scalable web applications and integrating third-party services. However, he lacks experience in Django, microservices architecture, and cloud platforms beyond AWS.
 
 ### Dynamic Interview Questions
 
-* Explain how you handled data quality issues in your previous role.
-* Describe your experience with metadata management tools.
-* How have you used SQL to improve reporting decisions?
-
 ### Learning Plan
-
-* Learn metadata fundamentals
-* Study Collibra basics
-* Practice governance documentation
-* Build a mini governance portfolio project
-
-Estimated Time:
-
-30–45 hours
 
 Roadmap:
 
