@@ -248,7 +248,7 @@ Demo video link.
 
 ## Live Project URL
 
-Deployment link.
+https://skill-assessment-agent.streamlit.app/
 
 ---
 
